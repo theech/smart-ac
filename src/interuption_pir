@@ -1,0 +1,150 @@
+
+#include <Arduino.h>
+/*********
+  Rui Santos
+  Complete project details at https://randomnerdtutorials.com  
+*********/
+#include <Arduino.h>
+#define timeSeconds 10
+
+const int led = 2;			 // Set GPIO for LED
+const int motionSensor = 34; // PIR Motion Sensor
+const int switching = 33;	 // set GPIO for switch
+const int sw_lr1 = 19;		 // set GPIO for relay 1
+
+// Timer: Auxiliary variables
+unsigned long now = millis();
+unsigned long lastTrigger = 0;
+boolean startTimer = false;
+
+// feature state
+boolean state = false;
+
+// Checks if motion was detected, sets LED HIGH and starts a timer
+void IRAM_ATTR detectsMovement()
+{
+	Serial.println("MOTION DETECTED!!!");
+	digitalWrite(led, HIGH);
+	startTimer = true;
+	lastTrigger = millis();
+}
+
+void setup()
+{
+	// Serial port for debugging purposes
+	Serial.begin(115200);
+
+	// PIR Motion Sensor mode INPUT_PULLUP
+	pinMode(motionSensor, INPUT_PULLUP);
+	// Set motionSensor pin as interrupt, assign interrupt function and set RISING mode
+	attachInterrupt(digitalPinToInterrupt(motionSensor), detectsMovement, RISING);
+
+	// set rely as an output device
+	pinMode(sw_lr1, OUTPUT);
+
+	// set Switch as an input device
+	pinMode(switching, INPUT);
+
+	// Set LED to LOW
+	pinMode(led, OUTPUT);
+	digitalWrite(led, LOW);
+}
+
+// bool func_switch()
+// {
+// 	int sw = digitalRead(switching);
+// 	// if (sw == 1)
+// 	// 	state = true;
+// 	// else
+// 	// 	state = false;
+
+// 	return sw = 1 ? true : false;
+// }
+
+// TODO: automatic mode
+// 		1. swA -> on & PIR -> on
+//			- IR -> send -> on code
+//			- rlA -> on (all lamps are on)
+//		2. swA -> on & PIR -> off
+// 			- IR -> send -> off code
+//			- rlA -> off (all lamps are off)
+
+// TODO: manual mode
+// 		1. swA -> off & PIR -> on
+//			- IR -> send -> on code
+//			- rlA -> off (all lamps are off)
+//		2. sw1 -> on & sw2 -> off & sw3 -> off & PIR -> on
+//			- IR -> send -> on code
+//			- rl1 -> on
+//			- rl2 and rl3 -> off
+//		3. sw1 -> off & sw2 -> on & sw3 -> off & PIR -> on
+//			- IR -> send -> on code
+//			- rl2 -> on
+//			- rl1 and rl3 -> off
+//		4. sw1 -> off & sw2 -> off & sw3 -> on & PIR -> on
+//			- IR -> send -> on code
+//			- rl3 -> on
+//			- rl1 and rl2 -> off
+
+//		5. swA -> off & PIR -> off
+//			- IR -> send -> off code
+//			- rlA -> off (all lamp are off)
+//		6. sw1 -> off & sw2 -> on & sw3 -> on & PIR -> on
+//			- IR -> send -> off code
+//			- rl1 -> off
+//			- rl2 and rl3 -> on
+//		7. sw1 -> on & sw2 -> off & sw3 -> on & PIR -> on
+//			- IR -> send -> off code
+//			- rl2 -> off
+//			- rl1 and rl3 -> on
+//		8. sw1 -> on & sw2 -> on & sw3 -> off & PIR -> on
+//			- IR -> send -> off code
+//			- rl3 -> off
+//			- rl1 and rl2 -> on
+
+void loop()
+{
+	// Current time
+	now = millis();
+
+	bool sw = digitalRead(switching);
+
+	// Turn off the LED after the number of seconds defined in the timeSeconds variable
+	if (startTimer && (now - lastTrigger > (timeSeconds * 2000)))
+	{
+		Serial.println("Motion stopped...");
+		digitalWrite(led, LOW);
+		startTimer = false;
+
+		Serial.println(String(sw) + " auto");
+
+		// swA -> on & PIR -> on
+		if (sw == false)
+		{
+			// IR -> send -> on code
+			// rlA -> on (all lamps are on)
+			digitalWrite(sw_lr1, HIGH);
+			Serial.println("switch on");
+		}
+		else
+		{
+			digitalWrite(sw_lr1, LOW);
+			Serial.println("switch on");
+		}
+	}
+	else
+	{
+		state = false;
+
+		Serial.println(String(sw) + " manual");
+	}
+
+	// Serial.println(func_switch());
+
+	// if (state)
+	// 	Serial.println(func_switch());
+	// else
+	// 	Serial.println(func_switch());
+
+	delay(100);
+}

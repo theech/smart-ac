@@ -1,0 +1,124 @@
+#include <Arduino.h>
+/*************************************************/
+#define pin_Relay 19
+#define pin_PIR 34
+#define pin_LED 2 //LED BUILIN
+#define pin_SW 33 //Pin SW
+
+/*************************************************/
+//Set Initial Time
+int Sec = 0;
+int Min = 0;
+int setTime = 0;
+// Check Stage Relay ON = 0,OFF = 1
+int stage = 0;
+
+void countTime();
+void countTime();
+void time1();
+
+/*************************************************/
+// Sensor On
+void startSensor()
+{
+  int pir = digitalRead(pin_PIR);
+  Serial.println("Check PIR =" + String(pir));
+  // Check Motion Sensor - 1 = Movement
+  if (pir == 1)
+  {
+    stage = 0;
+    setTime = 0;
+    Min = 0;
+    Sec = 0;
+  }
+  // No Movement
+  else
+  {
+    if (setTime == 0)
+    {
+      setTime = 1; // Set counter 1 minutes
+    }
+    if (setTime > 0)
+    {
+      if (stage == 0)
+      {
+        time1(); //Chech Time
+      }
+    }
+  }
+}
+
+// Function CountTime Stop
+void time1()
+{
+  // put your main code here, to run repeatedly:
+  if (Min == setTime)
+  {
+    Serial.println("Return Min =" + String(Min));
+    delay(1000);
+    //Reset Time
+    setTime = 0;
+    Min = 0;
+    Sec = 0;
+    stage = 1;
+  }
+  else
+  {
+    countTime();
+  }
+  Serial.println("Time = " + String(Min) + ":" + String(Sec)); // Print Time
+  delay(1000);
+}
+
+void countTime()
+{
+  if (Sec < 59)
+  {
+    Sec = Sec + 1;
+  }
+  else
+  {
+    Min = Min + 1;
+    Sec = 0;
+  }
+}
+
+/*************************************************/
+void setup()
+{
+
+  Serial.begin(115200);
+  Serial.println("Start");
+  pinMode(pin_Relay, OUTPUT);
+  pinMode(pin_SW, INPUT);
+  pinMode(pin_PIR, INPUT);
+  pinMode(pin_LED, OUTPUT); // LED Set
+  //digitalWrite(pin_SW,HIGH);
+}
+
+void loop()
+{
+  int sw = digitalRead(pin_SW);
+  if (sw == 1)
+  {
+    startSensor();
+    Serial.println("Manual = OFF");
+    digitalWrite(pin_LED, LOW); //LED
+  }
+  else
+  {
+    Serial.println("Manual = ON");
+    digitalWrite(pin_LED, HIGH); // LED
+    stage = 1;
+    delay(2000);
+  }
+
+  if (stage == 1)
+  {
+    digitalWrite(pin_Relay, LOW); // Ralay OFF
+  }
+  if (stage == 0)
+  {
+    digitalWrite(pin_Relay, HIGH); // Ralay ON
+  }
+}

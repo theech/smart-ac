@@ -1,0 +1,25 @@
+#include <Arduino.h>
+
+const byte ledPin = 2;
+const byte interruptPin = 12;
+volatile byte state = LOW;
+
+void blink()
+{
+	state = !state;
+	Serial.println(state);
+	delay(500);
+}
+
+void setup()
+{
+	Serial.begin(115200);
+	pinMode(ledPin, OUTPUT);
+	pinMode(interruptPin, INPUT_PULLUP);
+	attachInterrupt(digitalPinToInterrupt(interruptPin), blink, CHANGE);
+}
+
+void loop()
+{
+	digitalWrite(ledPin, state);
+}

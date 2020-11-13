@@ -1,0 +1,32 @@
+#include <Arduino.h>
+/*************************************************/
+#define pin_PIR 32
+#define pin_LED 2 //LED BUILIN
+
+/*************************************************/
+// Sensor On
+bool startSensor()
+{
+  int pir = digitalRead(pin_PIR);
+  // Check Motion Sensor - 1 = Movement
+  Serial.println("Check PIR =" + String(pir));
+  // turn one builin led when the sensor is detected
+  return (pir == 1) ? true : false;
+}
+
+/*************************************************/
+void setup()
+{
+
+  Serial.begin(115200);
+  Serial.println("Start");
+  pinMode(pin_PIR, INPUT);
+  pinMode(pin_LED, OUTPUT); // LED Set
+  //digitalWrite(pin_SW,HIGH);
+}
+
+void loop()
+{
+  startSensor();
+  Serial.println(startSensor());
+}
