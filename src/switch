@@ -1,9 +1,5 @@
 
 #include <Arduino.h>
-
-unsigned long previous = 0;
-const long interval = 500;
-
 void setup()
 {
 	Serial.begin(115200);
@@ -38,6 +34,7 @@ void loop()
 	bt_1 = digitalRead(22);
 	bt_2 = digitalRead(34);
 	bt_3 = digitalRead(39);
+	Serial.println(bt_1);
 
 	// bt1 --------------
 	if (bt_1 == LOW)
@@ -192,48 +189,34 @@ void loop()
 		}
 	}
 
-	unsigned long current = millis();
-
-	if (led_1 == 0 && led_2 == 0 && led_3 == 0 && check_sw == 0)
-	{
-		pir_1 = digitalRead(33);
-		pir_2 = digitalRead(32);
-		pir_3 = digitalRead(16);
-
-		if (current - previous >= interval)
-		{
-			previous = current;
-
-			Serial.print("pir_1: ");
-			Serial.println(pir_1);
-			Serial.print("pir_2: ");
-			Serial.println(pir_2);
-			Serial.print("pir_3: ");
-			Serial.println(pir_3);
-		}
-		if (pir_1 == 1 || pir_2 == 1 || pir_3 == 1)
-		{
-			digitalWrite(19, HIGH);
-			digitalWrite(18, HIGH);
-			digitalWrite(4, HIGH);
-			relay_1 = 1;
-			relay_2 = 1;
-			relay_3 = 1;
-			times = 5; // Set Time 5 sec , 60 = 1 min
-		}
-		else if (pir_1 == 0 && pir_2 == 0 && pir_3 == 0 && times != 0)
-		{
-			times = times - 1;
-			delay(1000);
-		}
-		else if (pir_1 == 0 && pir_2 == 0 && pir_3 == 0 && times == 0)
-		{
-			digitalWrite(19, LOW);
-			digitalWrite(18, LOW);
-			digitalWrite(4, LOW);
-			relay_1 = 0;
-			relay_2 = 0;
-			relay_3 = 0;
-		}
-	}
+	// if (led_1 == 0 && led_2 == 0 && led_3 == 0 && check_sw == 0)
+	// {
+	// 	pir_1 = digitalRead(33);
+	// 	pir_2 = digitalRead(32);
+	// 	pir_3 = digitalRead(16);
+	// 	if (pir_1 == 1 || pir_2 == 1 || pir_3 == 1)
+	// 	{
+	// 		digitalWrite(19, HIGH);
+	// 		digitalWrite(18, HIGH);
+	// 		digitalWrite(4, HIGH);
+	// 		relay_1 = 1;
+	// 		relay_2 = 1;
+	// 		relay_3 = 1;
+	// 		times = 5; // Set Time 5 sec , 60 = 1 min
+	// 	}
+	// 	else if (pir_1 == 0 && pir_2 == 0 && pir_3 == 0 && times != 0)
+	// 	{
+	// 		times = times - 1;
+	// 		delay(1000);
+	// 	}
+	// 	else if (pir_1 == 0 && pir_2 == 0 && pir_3 == 0 && times == 0)
+	// 	{
+	// 		digitalWrite(19, LOW);
+	// 		digitalWrite(18, LOW);
+	// 		digitalWrite(4, LOW);
+	// 		relay_1 = 0;
+	// 		relay_2 = 0;
+	// 		relay_3 = 0;
+	// 	}
+	// }
 }

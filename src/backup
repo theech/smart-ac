@@ -1,0 +1,89 @@
+// decliear switchs valiable to holding switch input
+const int switch1 = 12;
+// const int switch2 = 26;
+// const int switch3 = 25;
+
+// decliar pir input pins
+const int pir1 = 34;
+// const int pir2 = 35;
+
+// decliar the state holding mode, it should true (on auto mode) by defualt
+bool state = true;
+
+bool mode()
+{
+	// if switch on or off set state to auto
+	if (sw1)
+	{
+		state = true;
+	}
+	// otherwise set state to manual
+	else
+	{
+		state = false;
+	}
+
+	return state;
+}
+
+void setup()
+{
+	// Serial port for debugging purposes
+	Serial.begin(115200);
+}
+
+// bool func_switch()
+// {
+// 	int sw = digitalRead(switching);
+// 	// if (sw == 1)
+// 	// 	state = true;
+// 	// else
+// 	// 	state = false;
+
+// 	return sw = 1 ? true : false;
+// }
+
+// TODO: automatic mode
+// 		1. swA -> on & PIR -> on
+//			- IR -> send -> on code
+//			- rlA -> on (all lamps are on)
+//		2. swA -> on & PIR -> off
+// 			- IR -> send -> off code
+//			- rlA -> off (all lamps are off)
+
+// TODO: manual mode
+// 		1. swA -> off & PIR -> on
+//			- IR -> send -> on code
+//			- rlA -> off (all lamps are off)
+//		2. sw1 -> on & sw2 -> off & sw3 -> off & PIR -> on
+//			- IR -> send -> on code
+//			- rl1 -> on
+//			- rl2 and rl3 -> off
+//		3. sw1 -> off & sw2 -> on & sw3 -> off & PIR -> on
+//			- IR -> send -> on code
+//			- rl2 -> on
+//			- rl1 and rl3 -> off
+//		4. sw1 -> off & sw2 -> off & sw3 -> on & PIR -> on
+//			- IR -> send -> on code
+//			- rl3 -> on
+//			- rl1 and rl2 -> off
+
+//		5. swA -> off & PIR -> off
+//			- IR -> send -> off code
+//			- rlA -> off (all lamp are off)
+//		6. sw1 -> off & sw2 -> on & sw3 -> on & PIR -> on
+//			- IR -> send -> off code
+//			- rl1 -> off
+//			- rl2 and rl3 -> on
+//		7. sw1 -> on & sw2 -> off & sw3 -> on & PIR -> on
+//			- IR -> send -> off code
+//			- rl2 -> off
+//			- rl1 and rl3 -> on
+//		8. sw1 -> on & sw2 -> on & sw3 -> off & PIR -> on
+//			- IR -> send -> off code
+//			- rl3 -> off
+//			- rl1 and rl2 -> on
+
+void loop()
+{
+}

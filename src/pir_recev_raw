@@ -1,0 +1,79 @@
+#include <Arduino.h>
+#include <IRremote.h>
+
+#define sprintln Serial.println
+#define sprint Serial.print
+
+#define RECV_PIN 21
+
+#define PIR_PIN 32
+
+IRrecv irrecv(RECV_PIN);
+// IRsend irsend;
+decode_results results;
+
+void setup()
+{
+	Serial.begin(115200);
+	irrecv.enableIRIn();
+	pinMode(PIR_PIN, INPUT);
+	pinMode(LED_BUILTIN, OUTPUT);
+}
+
+int c = 1;
+
+void dump(decode_results *results)
+{
+	int count = results->rawlen;
+	sprintln(c);
+	c++;
+	sprintln("For IR Scope: ");
+	for (int i = 1; i < count; i++)
+	{
+		sprint("0x");
+		sprint((unsigned int)results->rawbuf[i], HEX);
+		sprint(" ");
+	}
+
+	sprintln("");
+	sprintln("For Arduino sketch: ");
+	sprint("unsigned int raw[");
+	sprint(count, DEC);
+	sprint("] = {");
+	for (int i = 1; i < count; i++)
+	{
+		sprint("0x");
+		sprint((unsigned int)results->rawbuf[i], HEX);
+		sprint(",");
+	}
+	sprint("};");
+	sprintln("");
+	sprint("irsend.sendRaw(raw,");
+	sprint(count, DEC);
+	sprint(",38);");
+	sprintln("");
+	sprintln("");
+}
+
+void loop()
+{
+	bool pir = digitalRead(PIR_PIN);
+	if (pir)
+	{
+		sprintln(pir);
+		// irsend.sendNEC(0x9CD0008A, 32);
+		digitalWrite(LED_BUILTIN, HIGH);
+		delay(1000);
+	}
+	else
+	{
+		// irsend.sendNEC(0x8CD0008A, 32);
+		digitalWrite(LED_BUILTIN, LOW);
+	}
+
+	if (irrecv.decode(&results))
+	{
+		dump(&results);
+		irrecv.resume(); // Receiver the next value
+	}
+}

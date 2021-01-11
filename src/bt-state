@@ -1,0 +1,34 @@
+#include <Arduino.h>
+
+#define sw 22
+#define led 2
+
+int state = LOW;
+int reading;
+int previous = LOW;
+
+void setup()
+{
+	Serial.begin(115200);
+	pinMode(sw, INPUT);
+	pinMode(led, OUTPUT);
+}
+
+void loop()
+{
+	reading = digitalRead(sw);
+
+	Serial.println(reading);
+	if (reading == HIGH && previous == LOW)
+	{
+		if (state == HIGH)
+			state = LOW;
+		else
+			state = HIGH;
+	}
+
+	digitalWrite(led, state);
+
+	previous = reading;
+	delay(100);
+}

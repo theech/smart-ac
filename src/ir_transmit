@@ -1,0 +1,87 @@
+#include <Arduino.h>
+#include <Arduino.h>
+#include <IRremoteESP8266.h>
+#include <IRsend.h>
+#include <ir_Gree.h>
+
+const uint16_t kIrLed = 21;
+IRGreeAC ac(kIrLed); // Set the GPIO to be used for sending messages.
+int bt_Pin1 = 22;
+int bt_Pin2 = 39;
+int bt1, bt2;
+int bt_1 = 0, bt_2 = 0;
+
+void printState()
+{
+	// Display the settings.
+	Serial.println("GREE A/C remote is in the following state:");
+	Serial.printf(" %s\n", ac.toString().c_str());
+	// Display the encoded IR sequence.
+	unsigned char *ir_code = ac.getRaw();
+	Serial.print("IR Code: 0x");
+	for (uint8_t i = 0; i < kGreeStateLength; i++)
+		Serial.printf("%02X", ir_code[i]);
+	Serial.println();
+}
+
+void setup()
+{
+	ac.begin();
+	Serial.begin(115200);
+	delay(200); // Set up what we want to send. See ir_Gree.cpp for all the options.
+	// Most things default on to off.
+	Serial.println("Default state of the remote.");
+	printState();
+	Serial.println("Setting desired state for A/C.");
+	ac.on();
+	ac.setFan(3);
+	// kGreeAuto, kGreeDry, kGreeCool, kGreeFan, kGreeHeat
+	ac.setMode(kGreeCool);
+	ac.setTemp(25); // 16-30C
+	ac.setSwingVertical(true, kGreeSwingAuto);
+	ac.setXFan(true);
+	ac.setLight(true);
+	ac.setSleep(false);
+	ac.setTurbo(true);
+	pinMode(bt_Pin1, INPUT);
+	pinMode(bt_Pin2, INPUT);
+}
+
+void loop()
+{
+	// Now send the IR signal.
+	// bt1 =ON
+	bt1 = digitalRead(bt_Pin1);
+	if (bt1 == LOW)
+	{
+		bt_1 = 1;
+	}
+	if (bt1 == HIGH)
+	{
+		if (bt_1 == 1)
+		{
+			Serial.println("Sending IR command to A/C ...");
+			ac.on();
+			ac.send();
+		}
+		bt_1 = 0;
+	}
+	// bt2 =OFF
+	bt2 = digitalRead(bt_Pin2);
+	if (bt2 == LOW)
+	{
+		bt_2 = 1;
+	}
+	if (bt2 == HIGH)
+	{
+		if (bt_2 == 1)
+		{
+			Serial.println("Sending IR command to A/C ...");
+			ac.off();
+			ac.send();
+		}
+		bt_2 = 0;
+	}
+	printState();
+	delay(1000);
+}

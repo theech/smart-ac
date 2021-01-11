@@ -1,0 +1,45 @@
+#include <Arduino.h>
+
+#define PT 22
+#define LED 2
+
+void setup()
+{
+	Serial.begin(115200);
+	// ก าหนด PIN INPUT OUTPUT และค่าเริ่มต้น
+	pinMode(PT, INPUT);	  // ก าหนดขา 27 เป็ น INPUT
+	pinMode(LED, OUTPUT); // ก าหนดขา 12 เป็ น OUTPUT
+}
+
+int stage_1 = 0; // เก็บสถานะการกดปุ่ ม
+int led_1 = 0;	 // เก็บสถานะการท างาน LED
+
+void loop()
+{
+	int bt_1 = digitalRead(PT); //รับค่าจากการกดปุ่ ม
+	Serial.print("bt: ");
+	Serial.println(bt_1);
+
+	if (bt_1 == LOW)
+	{				 // ถ้าเป็ น LOW ให้ท างานตามเงือนไข
+		stage_1 = 1; // มีการกดปุ่ ม stage_1 = 1
+		Serial.println(stage_1);
+	}
+
+	if (bt_1 == HIGH)
+	{
+		//ถ้าปล่อยปุ่ มแล้วif (stage_1 == 1 && led_1 == 0) { // ตรวจสอบการกดปุ่ มและสถานะ LED
+		digitalWrite(LED, HIGH); // ให้ LED ติด
+		led_1 = 1;				 // เก็บสถานการณ์ท างาน LED
+		stage_1 = 0;			 //บอกว่าปล่อยปุ่ มแล้ว
+		Serial.println(stage_1);
+	}
+	else if (stage_1 == 1 && led_1 == 1)
+	{
+		// ถ้ามีการกดปุ่ มอีกครั้ง แล้วหลอดไฟติดอยู่ให้ท างาน
+		digitalWrite(LED, LOW); // ให้ LED ดับ
+		led_1 = 0;				// เก็บสถานการณ์ท างาน LED
+		stage_1 = 0;			//บอกว่าปล่อยปุ่ มแล้ว
+		Serial.println(stage_1);
+	}
+}
