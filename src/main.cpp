@@ -16,8 +16,10 @@
 #define RL2 18
 #define RL3 4
 
-const uint16_t kIrLed = 17;
+const uint16_t kIrLed = 2;
 IRGreeAC ac(kIrLed);
+
+int control_state = 0;
 
 int state = HIGH;	// the current state of the output pin
 int reading;		// the current reading from the input pin
@@ -28,10 +30,20 @@ int pir_reading;
 int state_sw1 = HIGH;
 int reading_sw1;		// the current reading from the input pin
 int previous_sw1 = LOW; // the previous reading from the input pin
+
+int state_sw2 = HIGH;
+int reading_sw2;		// the current reading from the input pin
+int previous_sw2 = LOW; // the previous reading from the input pin
+
+int state_sw3 = HIGH;
+int reading_sw3;		// the current reading from the input pin
+int previous_sw3 = LOW; // the previous reading from the input pin
 // the follow variables are long's because the time, measured in miliseconds,
 // will quickly become a bigger number than can be stored in an int.
 unsigned long now;			  // the last time the output pin was toggled
 unsigned long now_sw1;		  // the last time the output pin was toggled
+unsigned long now_sw2;		  // the last time the output pin was toggled
+unsigned long now_sw3;		  // the last time the output pin was toggled
 unsigned long debounce = 200; // the debounce time, increase if the output flickers
 
 void printState()
@@ -45,6 +57,20 @@ void printState()
 	for (uint8_t i = 0; i < kGreeStateLength; i++)
 		sprintf("%02X", ir_code[i]);
 	sprintln();
+}
+
+void IRAM_ATTR acOn()
+{
+	ac.on();
+	ac.send();
+	sprintln("Sending IR On command");
+}
+
+void IRAM_ATTR acOff()
+{
+	ac.off();
+	ac.send();
+	sprintln("Sending IR Off command");
 }
 
 void setup()
@@ -75,9 +101,14 @@ void setup()
 	ac.setLight(true);
 	ac.setSleep(false);
 	ac.setTurbo(true);
+
+	// attachInterrupt(digitalPinToInterrupt(PIR1), acOn, RISING);
+	// delay(500);
+	// attachInterrupt(digitalPinToInterrupt(PIR1), acOff, FALLING);
+	// delay(500);
 }
 
-bool isSence()
+int isSence()
 {
 	pir_reading = digitalRead(PIR1);
 	sprintln("Check PIR =" + String(pir_reading));
@@ -99,30 +130,65 @@ bool switch1()
 	return state_sw1;
 }
 
+bool switch2()
+{
+	reading_sw2 = digitalRead(SW2);
+	if (reading_sw2 == HIGH && previous_sw2 == LOW && millis() - now_sw2 > debounce)
+	{
+		state_sw2 == HIGH ? state_sw2 = LOW : state_sw2 = HIGH;
+		now_sw2 = millis();
+		sprintln("sw 2 active now");
+	}
+	previous_sw2 = reading_sw2;
+
+	return state_sw2;
+}
+
+bool switch3()
+{
+	reading_sw3 = digitalRead(SW3);
+	if (reading_sw3 == HIGH && previous_sw3 == LOW && millis() - now_sw3 > debounce)
+	{
+		state_sw3 == HIGH ? state_sw3 = LOW : state_sw3 = HIGH;
+		now_sw3 = millis();
+		sprintln("sw 3 active now");
+	}
+	previous_sw3 = reading_sw3;
+
+	return state_sw3;
+}
+
 void autoMode()
 {
-	if (isSence())
+	if (control_state != isSence())
 	{
-		ac.on();
-		ac.send();
-		sprintln("Sending IR On command");
-
-		digitalWrite(RL1, HIGH);
-	}
-	else
-	{
-		ac.off();
-		ac.send();
-		sprintln("Sending IR Off command");
-
-		digitalWrite(RL1, LOW);
+		if (control_state == 1)
+		{
+			ac.off();
+			ac.send();
+			sprintln("Sending IR Off command");
+			digitalWrite(RL1, LOW);
+			digitalWrite(RL2, LOW);
+			digitalWrite(RL3, LOW);
+		}
+		else
+		{
+			ac.on();
+			ac.send();
+			sprintln("Sending IR On command");
+			digitalWrite(RL1, HIGH);
+			digitalWrite(RL2, HIGH);
+			digitalWrite(RL3, HIGH);
+		}
+		control_state = isSence();
 	}
 }
 
 void manualMode()
 {
-	// printState();
 	digitalWrite(RL1, switch1());
+	digitalWrite(RL2, switch2());
+	digitalWrite(RL3, switch3());
 }
 
 void loop()
@@ -141,10 +207,10 @@ void loop()
 	switch (state)
 	{
 	case 0:
-		manualMode();
+		autoMode();
 		break;
 	case 1:
-		autoMode();
+		manualMode();
 		break;
 	default:
 		sprintln("something wrong");
