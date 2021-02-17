@@ -1,0 +1,58 @@
+
+#include <Arduino.h>
+#include <IRremoteESP8266.h>
+#include <IRsend.h>
+
+//#define SW1 25
+//#define SW2 26
+const int SW1 = 25;
+const int SW2 = 39;
+
+const uint16_t kIrLed = 33; //Recommended: GPIO 4 (D2)
+//const uint16_t kIrLed = 35;
+uint16_t ac_on[73] = {8882, 4522, 568, 1740, 552, 630, 556, 634, 554, 1748, 572, 1712, 582, 1720, 576, 1746, 546, 632, 552, 1744, 576, 1722, 572, 1712, 580, 604, 584, 606, 580, 612, 574, 612, 574, 608, 576, 604, 582, 604, 582, 604, 584, 608, 576, 612, 574, 640, 546, 606, 580, 602, 582, 1720, 574, 612, 572, 612, 576, 606, 580, 1710, 582, 608, 580, 1748, 572, 606, 580, 604, 582, 1720, 574, 612, 574};
+
+uint16_t ac_off[73] = {8882, 4520, 570, 1712, 580, 602, 586, 608, 578, 610, 576, 1742, 578, 1714, 580, 1720, 574, 604, 580, 1714, 580, 1748, 546, 1742, 576, 600, 588, 598, 588, 606, 580, 610, 578, 608, 578, 606, 578, 602, 584, 604, 584, 600, 586, 608, 578, 608, 578, 608, 576, 606, 554, 1740, 580, 610, 578, 610, 576, 608, 578, 1712, 582, 598, 586, 1722, 572, 608, 578, 602, 584, 1740, 554, 608, 578};
+
+IRsend irsend(kIrLed);
+//Switch setup
+int readSW1;		  // Status SW1
+int previous1 = HIGH; // the previous SW1
+int readSW2;		  // Status SW1
+int previous2 = HIGH; // the previous SW2
+long lastSW1 = 0;	  // the last time the output pin was toggled
+long lastSW2 = 0;
+long debounce = 200; // the debounce time, increase if the output flickers
+
+void setup()
+{
+	Serial.begin(115200);
+	Serial.println("Setup");
+	pinMode(SW1, INPUT_PULLUP);
+	pinMode(SW2, INPUT_PULLUP);
+	irsend.begin();
+}
+
+void loop()
+{
+	readSW1 = digitalRead(SW1); //ac_on
+	if (readSW1 == LOW && previous1 == HIGH && millis() - lastSW1 > debounce)
+	{
+		irsend.sendRaw(ac_on, 73, 38);
+		//Serial.println("Send IR A/C ON");
+		lastSW1 = millis();
+		Serial.println("SW1 on");
+	}
+	previous1 = readSW1;
+
+	readSW2 = digitalRead(SW2); //ac_off
+	if (readSW2 == LOW && previous2 == HIGH && millis() - lastSW2 > debounce)
+	{
+		irsend.sendRaw(ac_off, 73, 38);
+		//Serial.println("Send IR A/C OFF");
+		lastSW2 = millis();
+		Serial.println("SW2 on");
+	}
+	previous2 = readSW2;
+	delay(10);
+}

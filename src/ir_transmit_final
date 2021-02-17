@@ -1,3 +1,4 @@
+
 #include <Arduino.h>
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
@@ -7,14 +8,20 @@
 #define sprintln Serial.println
 #define sprintf Serial.printf
 
-const uint16_t kIrLed = 21;
+const uint16_t kIrLed = 2;
 IRGreeAC ac(kIrLed);
 
-#define sw 22
+const int SW1 = 12;
+const int SW2 = 14;
 
-int state = LOW;
-int reading;
-int previous = LOW;
+//Switch setup
+int readSW1;		  // Status SW1
+int previous1 = HIGH; // the previous SW1
+int readSW2;		  // Status SW1
+int previous2 = HIGH; // the previous SW2
+long lastSW1 = 0;	  // the last time the output pin was toggled
+long lastSW2 = 0;
+long debounce = 200; // the debounce time, increase if the output flickers
 
 void printState()
 {
@@ -33,7 +40,8 @@ void setup()
 {
 	ac.on();
 	Serial.begin(115200);
-	pinMode(sw, INPUT);
+	pinMode(SW1, INPUT_PULLUP);
+	pinMode(SW2, INPUT_PULLUP);
 	delay(200); // Set up what we want to send. See ir_Gree.cpp for all the options.
 	// Most things default on to off.
 	sprintln("Default state of the remote.");
@@ -55,32 +63,27 @@ void setup()
 
 void loop()
 {
-	reading = digitalRead(sw);
-
-	if (reading == HIGH && previous == LOW)
+	int khz = 38;
+	readSW1 = digitalRead(SW1); //ac_on
+	if (readSW1 == LOW && previous1 == HIGH && millis() - lastSW1 > debounce)
 	{
-		if (state == HIGH)
-		{
-			state = LOW;
-
-			ac.on();
-			ac.send();
-			sprintln("Sending IR On command");
-		}
-		else
-		{
-			state = HIGH;
-
-			ac.off();
-			ac.send();
-			sprintln("Sending IR Off command");
-		}
+		ac.on();
+		ac.send();
+		//Serial.println("Send IR A/C ON");
+		lastSW1 = millis();
+		Serial.println("remote on");
 	}
+	previous1 = readSW1;
 
-	digitalWrite(LED_BUILTIN, state);
-
-	previous = reading;
-
-	printState();
-	delay(100);
+	readSW2 = digitalRead(SW2); //ac_off
+	if (readSW2 == LOW && previous2 == HIGH && millis() - lastSW2 > debounce)
+	{
+		ac.off();
+		ac.send();
+		//Serial.println("Send IR A/C OFF");
+		lastSW2 = millis();
+		Serial.println("remote off");
+	}
+	previous2 = readSW2;
+	delay(10);
 }
