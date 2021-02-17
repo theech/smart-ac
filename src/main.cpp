@@ -115,6 +115,7 @@ void setup()
 int isSence()
 {
 	// TODO: more than one PIR you need to do in the OR condition
+	// uncomment below to complete the statment
 	// (pir_reading1 == 1 || pir_reading2 == 1) ? pir_state = 1 : pir_state = 0;
 	pir_reading = digitalRead(PIR1);
 	sprintln("Check PIR =" + String(pir_reading));
