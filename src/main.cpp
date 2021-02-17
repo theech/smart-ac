@@ -11,7 +11,7 @@
 #define PIR1 32
 #define SW1 34
 #define SW2 26
-#define SW3 27
+#define SW3 25
 #define RL1 19
 #define RL2 18
 #define RL3 4
@@ -45,6 +45,10 @@ unsigned long now_sw1;		  // the last time the output pin was toggled
 unsigned long now_sw2;		  // the last time the output pin was toggled
 unsigned long now_sw3;		  // the last time the output pin was toggled
 unsigned long debounce = 200; // the debounce time, increase if the output flickers
+
+// change mode time controlling
+unsigned long now_feature;
+unsigned long debounce_feature = 50000;
 
 void printState()
 {
@@ -110,9 +114,12 @@ void setup()
 
 int isSence()
 {
+	// TODO: more than one PIR you need to do in the OR condition
+	// (pir_reading1 == 1 || pir_reading2 == 1) ? pir_state = 1 : pir_state = 0;
 	pir_reading = digitalRead(PIR1);
 	sprintln("Check PIR =" + String(pir_reading));
 	// turn one builin led when the sensor is detected
+	// return pir_state;
 	return pir_reading;
 }
 
@@ -211,6 +218,16 @@ void loop()
 		break;
 	case 1:
 		manualMode();
+		if (millis() - now_feature > debounce_feature)
+		{
+			if (!isSence())
+			{
+				state = 0;
+				control_state = 1;
+				sprintln("change mode now");
+			}
+			now_feature = millis();
+		}
 		break;
 	default:
 		sprintln("something wrong");
