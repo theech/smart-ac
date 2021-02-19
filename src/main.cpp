@@ -7,8 +7,12 @@
 #define sprintln Serial.println
 #define sprintf Serial.printf
 
+#define TRIGER 33
+#define STATUS 21
 #define FEATURE 12
 #define PIR1 32
+#define PIR2 35
+#define PIR3 39
 #define SW1 34
 #define SW2 26
 #define SW3 25
@@ -16,16 +20,18 @@
 #define RL2 18
 #define RL3 4
 
-const uint16_t kIrLed = 2;
+const uint16_t kIrLed = 33;
 IRGreeAC ac(kIrLed);
 
-int control_state = 0;
+int control_state = 1;
 
 int state = HIGH;	// the current state of the output pin
 int reading;		// the current reading from the input pin
 int previous = LOW; // the previous reading from the input pin
 
-int pir_reading;
+int pir_reading1 = 0;
+int pir_reading2 = 0;
+int pir_reading3 = 0;
 
 int state_sw1 = HIGH;
 int reading_sw1;		// the current reading from the input pin
@@ -48,7 +54,7 @@ unsigned long debounce = 200; // the debounce time, increase if the output flick
 
 // change mode time controlling
 unsigned long now_feature;
-unsigned long debounce_feature = 50000;
+unsigned long debounce_feature = 20000;
 
 void printState()
 {
@@ -63,28 +69,17 @@ void printState()
 	sprintln();
 }
 
-void IRAM_ATTR acOn()
-{
-	ac.on();
-	ac.send();
-	sprintln("Sending IR On command");
-}
-
-void IRAM_ATTR acOff()
-{
-	ac.off();
-	ac.send();
-	sprintln("Sending IR Off command");
-}
-
 void setup()
 {
+	pinMode(TRIGER, OUTPUT);
+	pinMode(STATUS, OUTPUT);
 	pinMode(FEATURE, INPUT);
 	pinMode(PIR1, INPUT);
+	pinMode(PIR2, INPUT);
+	pinMode(PIR3, INPUT);
 	pinMode(SW1, INPUT);
 	pinMode(SW2, INPUT);
 	pinMode(SW3, INPUT);
-	pinMode(BUILTIN_LED, OUTPUT);
 	pinMode(RL1, OUTPUT);
 	pinMode(RL2, OUTPUT);
 	pinMode(RL3, OUTPUT);
@@ -105,11 +100,22 @@ void setup()
 	ac.setLight(true);
 	ac.setSleep(false);
 	ac.setTurbo(true);
+}
 
-	// attachInterrupt(digitalPinToInterrupt(PIR1), acOn, RISING);
-	// delay(500);
-	// attachInterrupt(digitalPinToInterrupt(PIR1), acOff, FALLING);
-	// delay(500);
+void acOff()
+{
+	digitalWrite(TRIGER, LOW);
+	ac.off();
+	ac.send();
+	sprintln("Sending IR Off command");
+}
+
+void acOn()
+{
+	digitalWrite(TRIGER, HIGH);
+	ac.on();
+	ac.send();
+	sprintln("Sending IR On command");
 }
 
 int isSence()
@@ -117,11 +123,19 @@ int isSence()
 	// TODO: more than one PIR you need to do in the OR condition
 	// uncomment below to complete the statment
 	// (pir_reading1 == 1 || pir_reading2 == 1) ? pir_state = 1 : pir_state = 0;
-	pir_reading = digitalRead(PIR1);
-	sprintln("Check PIR =" + String(pir_reading));
+	pir_reading1 = digitalRead(PIR1);
+	pir_reading2 = digitalRead(PIR2);
+	pir_reading3 = digitalRead(PIR3);
+
+	int status_pirs;
+	(pir_reading1 == 1 || pir_reading2 == 1 || pir_reading3 == 1) ? status_pirs = 1 : status_pirs = 0;
+
+	// sprintln("status =" + String(status_pirs));
+	sprintln("Check PIR =" + String(pir_reading1) + "\t" + String(pir_reading2) + "\t" + String(pir_reading3));
+	delay(200);
 	// turn one builin led when the sensor is detected
 	// return pir_state;
-	return pir_reading;
+	return status_pirs;
 }
 
 bool switch1()
@@ -168,25 +182,26 @@ bool switch3()
 
 void autoMode()
 {
+	sprintln(isSence());
 	if (control_state != isSence())
 	{
+		// falling from 1 --> 0
 		if (control_state == 1)
 		{
-			ac.off();
-			ac.send();
-			sprintln("Sending IR Off command");
+			acOff();
 			digitalWrite(RL1, LOW);
 			digitalWrite(RL2, LOW);
 			digitalWrite(RL3, LOW);
+			delay(200);
 		}
+		// reasing from 0 --> 1
 		else
 		{
-			ac.on();
-			ac.send();
-			sprintln("Sending IR On command");
+			acOn();
 			digitalWrite(RL1, HIGH);
 			digitalWrite(RL2, HIGH);
 			digitalWrite(RL3, HIGH);
+			delay(200);
 		}
 		control_state = isSence();
 	}
@@ -223,9 +238,15 @@ void loop()
 		{
 			if (!isSence())
 			{
+				acOff();
+				digitalWrite(RL1, LOW);
+				digitalWrite(RL2, LOW);
+				digitalWrite(RL3, LOW);
+
 				state = 0;
 				control_state = 1;
 				sprintln("change mode now");
+				delay(200);
 			}
 			now_feature = millis();
 		}
@@ -235,7 +256,7 @@ void loop()
 		break;
 	}
 
-	digitalWrite(BUILTIN_LED, state);
+	digitalWrite(STATUS, state);
 
 	previous = reading;
 }
