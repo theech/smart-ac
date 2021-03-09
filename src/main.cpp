@@ -123,11 +123,12 @@ int isSence()
 	// TODO: more than one PIR you need to do in the OR condition
 	// uncomment below to complete the statment
 	// (pir_reading1 == 1 || pir_reading2 == 1) ? pir_state = 1 : pir_state = 0;
+	delay(200);
 	pir_reading1 = digitalRead(PIR1);
 	pir_reading2 = digitalRead(PIR2);
 	pir_reading3 = digitalRead(PIR3);
 
-	int status_pirs;
+	int status_pirs = 0;
 	(pir_reading1 == 1 || pir_reading2 == 1 || pir_reading3 == 1) ? status_pirs = 1 : status_pirs = 0;
 
 	// sprintln("status =" + String(status_pirs));
@@ -240,8 +241,8 @@ void loop()
 			{
 				acOff();
 				digitalWrite(RL1, LOW);
-				digitalWrite(RL2, LOW);
-				digitalWrite(RL3, LOW);
+				// digitalWrite(RL2, LOW);
+				// digitalWrite(RL3, LOW);
 
 				state = 0;
 				control_state = 1;
